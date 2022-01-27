@@ -21,9 +21,53 @@ namespace FGDiscordBotTing
 		public string startTime;
 		public string endTime;
 	}
+
+	class TimerUpdater
+	{
+		public string msgPrefix;
+		public string msgSuffix;
+		public Task<RestUserMessage> msgTask;
+		public DateTime endTime;
+		public Thread thread;
+
+		public TimerUpdater(string msgPrefix, string msgSuffix, Task<RestUserMessage> msgTask, DateTime endTime)
+		{
+			this.msgPrefix = msgPrefix;
+			this.msgSuffix = msgSuffix;
+			this.msgTask = msgTask;
+			this.endTime = endTime;
+			
+			thread = new Thread(TimerMain);
+			thread.Start();
+		}
+
+		public void TimerMain()
+		{
+			msgTask.Wait();
+			RestUserMessage msg = msgTask.Result;
+			TimeSpan current = endTime - DateTime.Now;
+
+			while (current.Seconds > 0)
+			{
+				int ms = (int) Math.Round(((current.TotalSeconds - 0.05f) % 15f) * 1000f);
+				Console.WriteLine($"Timer Updater: Start sleep for {ms} milliseconds");
+				Thread.Sleep(ms);
+				current = endTime - DateTime.Now;
+
+				Console.WriteLine($"Timer Updater: Modify discord message to \"{msgPrefix}`{current.ToString(@"mm\:ss")}`{msgSuffix}\"");
+				msg.ModifyAsync(a =>
+				{
+					a.Content = $"{msgPrefix}`{current.ToString(@"mm\:ss")}`{msgSuffix}";
+				});
+			}
+		}
+	}
     
 	class TimeAnnouncer
 	{
+		private const bool deleteMessages = true;
+		private const bool countdown = false;
+
 		public ISocketMessageChannel channel;
 
 		public TimeAnnouncer(ISocketMessageChannel channel)
@@ -34,6 +78,9 @@ namespace FGDiscordBotTing
 		public void AnnounceMain()
 		{
 			int currentEventIndex = 0;
+
+			List<Task<RestUserMessage>> currentMessages = new List<Task<RestUserMessage>>();
+			TimerUpdater updater = null;
 
 			while (currentEventIndex < Program.events.Count)
 			{
@@ -50,31 +97,56 @@ namespace FGDiscordBotTing
 				}
                 
 				TimeSpan spanToStart = eventStartTime - currentTime;
-				if(spanToStart.Milliseconds > 0)
-					Thread.Sleep(spanToStart);
-				
+				int ms = (int) Math.Round(spanToStart.TotalMilliseconds);
+				if(ms > 1)
+					Thread.Sleep(ms - 50);
+
+				if (deleteMessages)
+				{
+					foreach (Task<RestUserMessage> msg in currentMessages)
+					{
+						msg.Wait();
+						msg.Result.DeleteAsync();
+					}
+				}
+				currentMessages.Clear();
+
 				switch (currentEvent.type)
 				{
 					case EventType.Meeting:
 					{
-						channel.SendMessageAsync($"Meeting start! (ends in {(int) Math.Round((eventEndTime - DateTime.Now).TotalMinutes)} minutes)");
-						Thread.Sleep((int) Math.Round((eventEndTime - DateTime.Now).TotalMilliseconds * 0.5));
-						channel.SendMessageAsync($"Halfway point! ({(int) Math.Round((eventEndTime - DateTime.Now).TotalMinutes)} minutes left)");
-						Thread.Sleep((int) Math.Round(((eventEndTime - DateTime.Now).TotalMinutes - 2) * 60 * 1000));
-						channel.SendMessageAsync($"2 minutes left");
+						Task<RestUserMessage> msgTask = channel.SendMessageAsync($"Meeting start! (ends in `{TimeToEventEnd().ToString(@"mm\:ss")}`)");
+						
+						if(countdown)
+							updater = new TimerUpdater("Meeting start! (ends in ", ")", msgTask, eventEndTime);
+						
+						currentMessages.Add(msgTask);
+
+						Thread.Sleep((int) Math.Round(TimeToEventEnd().TotalMilliseconds * 0.5));
+						currentMessages.Add(channel.SendMessageAsync($"Halfway point! ({(int) Math.Round(TimeToEventEnd().TotalMinutes)} minutes left)"));
+						Thread.Sleep((int) Math.Round((TimeToEventEnd().TotalMinutes - 2.0) * 60.0 * 1000.0));
+						currentMessages.Add(channel.SendMessageAsync($"2 minutes left"));
 						Thread.Sleep(1 * 60 * 1000);
-						channel.SendMessageAsync($"1 minute left");
-						++currentEventIndex;
+						currentMessages.Add(channel.SendMessageAsync($"1 minute left"));
 						break;
 					}
 					case EventType.Break:
 					{
-						channel.SendMessageAsync($"Break for {(int) Math.Round((eventEndTime - DateTime.Now).TotalMinutes)} minutes!");
-						++currentEventIndex;
+						string prefix = $"Break for {(int) Math.Round(TimeToEventEnd().TotalMinutes)} minutes! (ends in ";
+						Task<RestUserMessage> msg = channel.SendMessageAsync($"{prefix}`{TimeToEventEnd().ToString(@"mm\:ss")}`)");
+						
+						if(countdown)
+							updater = new TimerUpdater(prefix, ")", msg, eventEndTime);
+						
+						currentMessages.Add(msg);
 						break;
 					}
 					default: break;
 				}
+				
+				++currentEventIndex;
+
+				TimeSpan TimeToEventEnd() => (eventEndTime - DateTime.Now);
 			}
 
 			channel.SendMessageAsync("Day end!");
@@ -97,7 +169,7 @@ namespace FGDiscordBotTing
                 
 				string[] substrings = line.Split(' ');
 				if (substrings.Length != 3)
-					throw new ArgumentOutOfRangeException("Substring was above 3, which means the file has the wrong format on one or more lines");
+					throw new ArgumentOutOfRangeException("substrings", "Substring was above 3, which means the file has the wrong format on one or more lines");
 
 				Event current = new Event();
 				current.startTime = substrings[0];
@@ -164,6 +236,13 @@ namespace FGDiscordBotTing
 					Thread current = new Thread(announcer.AnnounceMain);
 					_currentThreads.Add(message.Channel, current);
 					current.Start();
+					break;
+				}
+				case "help":
+				{
+					message.Channel.SendMessageAsync("Possible commands:\n" +
+					                                 "!test - used to test the bot that it is correctly receiving commands.\n" +
+					                                 "!setup - Starts the time keeping in the channel where this command is written.");
 					break;
 				}
 				default: break;
