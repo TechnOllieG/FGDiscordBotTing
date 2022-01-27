@@ -65,7 +65,7 @@ namespace FGDiscordBotTing
     
 	class TimeAnnouncer
 	{
-		private const bool deleteMessages = true;
+		private const bool deleteMessages = false;
 		private const bool countdown = false;
 
 		public ISocketMessageChannel channel;
@@ -132,7 +132,7 @@ namespace FGDiscordBotTing
 					}
 					case EventType.Break:
 					{
-						string prefix = $"Break for {(int) Math.Round(TimeToEventEnd().TotalMinutes)} minutes! (ends in ";
+						string prefix = $"Break time! (ends in ";
 						Task<RestUserMessage> msg = channel.SendMessageAsync($"{prefix}`{TimeToEventEnd().ToString(@"mm\:ss")}`)");
 						
 						if(countdown)
