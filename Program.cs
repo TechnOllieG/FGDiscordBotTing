@@ -47,26 +47,29 @@ namespace FGDiscordBotTing
 			RestUserMessage msg = msgTask.Result;
 			TimeSpan current = endTime - DateTime.Now;
 
-			while (current.Seconds > 0)
+			while (current.TotalSeconds > 5f)
 			{
-				int ms = (int) Math.Round(((current.TotalSeconds - 0.05f) % 15f) * 1000f);
-				Console.WriteLine($"Timer Updater: Start sleep for {ms} milliseconds");
+				int ms = (int) Math.Round(((current.TotalSeconds - 0.05f) % 5f) * 1000f);
 				Thread.Sleep(ms);
 				current = endTime - DateTime.Now;
-
-				Console.WriteLine($"Timer Updater: Modify discord message to \"{msgPrefix}`{current.ToString(@"mm\:ss")}`{msgSuffix}\"");
+				
 				msg.ModifyAsync(a =>
 				{
 					a.Content = $"{msgPrefix}`{current.ToString(@"mm\:ss")}`{msgSuffix}";
 				});
 			}
+			
+			msg.ModifyAsync(a =>
+			{
+				a.Content = $"{msgPrefix}`00:00`{msgSuffix}";
+			});
 		}
 	}
     
 	class TimeAnnouncer
 	{
 		private const bool deleteMessages = false;
-		private const bool countdown = false;
+		private const bool countdown = true;
 
 		public ISocketMessageChannel channel;
 
@@ -89,7 +92,7 @@ namespace FGDiscordBotTing
 				DateTime eventStartTime = DateTime.Parse(currentEvent.startTime);
 				DateTime eventEndTime = DateTime.Parse(currentEvent.endTime);
 
-				if (DateTime.Compare(currentTime, eventStartTime) > 0 && (currentTime - eventStartTime).Seconds > 15)
+				if (DateTime.Compare(currentTime, eventStartTime) > 0 && (eventStartTime - currentTime).TotalSeconds < -15)
 				{
 					Console.WriteLine("Event start time is later than current time, skipping this event");
 					++currentEventIndex;
