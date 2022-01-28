@@ -5,7 +5,6 @@
 
 # Discord OAuth Token in this file
 token.txt
-schedule.txt
 
 # User-specific files
 *.rsuser
