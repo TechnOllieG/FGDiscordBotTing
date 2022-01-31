@@ -157,6 +157,7 @@ namespace FGDiscordBotTing
 			}
 
 			channel.SendMessageAsync("Day end!");
+			Console.WriteLine($"Day ended in channel \"{channel.Name}\"");
 		}
 	}
     
