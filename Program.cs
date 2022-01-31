@@ -84,6 +84,7 @@ namespace FGDiscordBotTing
 
 			List<Task<RestUserMessage>> currentMessages = new List<Task<RestUserMessage>>();
 			TimerUpdater updater = null;
+			int currentMeetingNumber = 1;
 
 			while (currentEventIndex < Program.events.Count)
 			{
@@ -96,6 +97,8 @@ namespace FGDiscordBotTing
 				{
 					Console.WriteLine("Event start time is later than current time, skipping this event");
 					++currentEventIndex;
+					if (currentEvent.type == EventType.Meeting)
+						++currentMeetingNumber;
 					continue;
 				}
                 
@@ -118,10 +121,10 @@ namespace FGDiscordBotTing
 				{
 					case EventType.Meeting:
 					{
-						Task<RestUserMessage> msgTask = channel.SendMessageAsync($"Meeting start! (ends in `{TimeToEventEnd().ToString(@"mm\:ss")}`)");
+						Task<RestUserMessage> msgTask = channel.SendMessageAsync($"Meeting {currentMeetingNumber} start! (ends in `{TimeToEventEnd().ToString(@"mm\:ss")}`)");
 						
 						if(countdown)
-							updater = new TimerUpdater("Meeting start! (ends in ", ")", msgTask, eventEndTime);
+							updater = new TimerUpdater($"Meeting {currentMeetingNumber} start! (ends in ", ")", msgTask, eventEndTime);
 						
 						currentMessages.Add(msgTask);
 
@@ -131,6 +134,7 @@ namespace FGDiscordBotTing
 						currentMessages.Add(channel.SendMessageAsync($"2 minutes left"));
 						Thread.Sleep(1 * 60 * 1000);
 						currentMessages.Add(channel.SendMessageAsync($"1 minute left"));
+						++currentMeetingNumber;
 						break;
 					}
 					case EventType.Break:
@@ -167,7 +171,7 @@ namespace FGDiscordBotTing
 
 			foreach (string line in file)
 			{
-				if (line.StartsWith("//"))
+				if (line.StartsWith("//") || string.IsNullOrWhiteSpace(line))
 					continue;
                 
 				string[] substrings = line.Split(' ');
@@ -234,7 +238,8 @@ namespace FGDiscordBotTing
 						break;
 					}
 
-					message.Channel.SendMessageAsync("Starting time keeper in this channel!");
+					Console.WriteLine($"Starting time keeper in a channel with name: \"{message.Channel.Name}\" by user \"{message.Author.Username}\"");
+					message.Channel.SendMessageAsync("Starting time keeper in this channel! (assumes event is today)");
 					TimeAnnouncer announcer = new TimeAnnouncer(message.Channel);
 					Thread current = new Thread(announcer.AnnounceMain);
 					_currentThreads.Add(message.Channel, current);

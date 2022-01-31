@@ -1,4 +1,100 @@
-// These are just placeholder times
-08:40 08:50 Meeting
-08:50 08:55 Break
-08:55 09:05 Meeting
+// Meeting 1
+09:00 09:10 Meeting
+// Meeting 2
+09:10 09:20 Meeting
+// Meeting 3
+09:20 09:30 Meeting
+
+// Mid-meetings break
+09:30 09:35 Break
+
+// Meeting 4
+09:35 09:45 Meeting
+// Meeting 5
+09:45 09:55 Meeting
+
+// Longer break
+09:55 10:15 Break
+
+// Meeting 6
+10:15 10:25 Meeting
+// Meeting 7
+10:25 10:35 Meeting
+// Meeting 8
+10:35 10:45 Meeting
+
+// Mid-meetings break
+10:45 10:50 Break
+
+// Meeting 9
+10:50 11:00 Meeting
+// Meeting 10
+11:00 11:10 Meeting
+
+// Longer break
+11:10 11:30 Break
+
+// Meeting 11
+11:30 11:40 Meeting
+// Meeting 12
+11:40 11:50 Meeting
+// Meeting 13
+11:50 12:00 Meeting
+
+// Lunch
+12:00 13:00 Break
+
+// Meeting 14
+13:00 13:10 Meeting
+// Meeting 15
+13:10 13:20 Meeting
+// Meeting 16
+13:20 13:30 Meeting
+
+// Mid-meetings break
+13:30 13:35 Break
+
+// Meeting 17
+13:35 13:45 Meeting
+// Meeting 18
+13:45 13:55 Meeting
+
+// Longer break
+13:55 14:15 Break
+
+// Meeting 19
+14:15 14:25 Meeting
+// Meeting 20
+14:25 14:35 Meeting
+// Meeting 21
+14:35 14:45 Meeting
+
+// Mid-meetings break
+14:45 14:50 Break
+
+// Meeting 22
+14:50 15:00 Meeting
+// Meeting 23
+15:00 15:10 Meeting
+
+// Longer break
+15:10 15:30 Break
+
+// Meeting 24
+15:30 15:40 Meeting
+// Meeting 25
+15:40 15:50 Meeting
+// Meeting 26
+15:50 16:00 Meeting
+// Meeting 27
+16:00 16:10 Meeting
+
+// Longer break
+16:10 16:30 Break
+
+// Meeting 28
+16:30 16:40 Meeting
+// Meeting 29
+16:40 16:50 Meeting
+// Meeting 30
+16:50 17:00 Meeting
